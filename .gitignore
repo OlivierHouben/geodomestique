@@ -304,3 +304,4 @@ __pycache__/
 geo9V1.vsarduino.h
 *.vcxproj
 *.xml
+*.vcxproj.filters
