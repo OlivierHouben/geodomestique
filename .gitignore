@@ -299,6 +299,6 @@ __pycache__/
 *.xsd.cs
 
 # Add to the project
-
 *.vsarduino.h
 /geo9V1.vsarduino.h
+geo9V1.vsarduino.h
