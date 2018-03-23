@@ -302,3 +302,4 @@ __pycache__/
 *.vsarduino.h
 /geo9V1.vsarduino.h
 geo9V1.vsarduino.h
+*.vcxproj
