@@ -30,12 +30,16 @@ SoftwareSerial Serial1(7,8); // RX, TX
 								// set your cad pin (optional)
 #define CARD_PIN ""
 
-ThingerTinyGSM thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL, Serial1);
 
+#define Idcompteur 001
+ThingerTinyGSM thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL, Serial1);
+int speed1;
+bool emailsent;
 void setup() {
 	// uncomment line for debug
 	 Serial.begin(9600);
-
+	 emailsent = 0;
+	 speed1 = 0;
 	// Serial for AT commands (can be higher with HW Serial, or even lower in SW Serial)
 	Serial1.begin(9600);
 
@@ -47,14 +51,41 @@ void setup() {
 
 	// resource input example (i.e, controlling a digitalPin);
 	pinMode(LED_BUILTIN, OUTPUT);
-	thing["led"] << digitalPin(LED_BUILTIN);
+	thing["led"] << [](pson& in) {
+		digitalWrite(13, in ? HIGH : LOW);
+	};
 
+	
+	thing["SPEED"] << inputValue(speed1, {	});
+	thing["emailsent"] << inputValue(emailsent, {});
+	thing["emailsentout"] >> outputValue(emailsent);
 	// resource output example (i.e. reading a sensor value)
 	thing["millis"] >> outputValue(millis());
+	thing["tweet_test"] = []() {
+		call_temperature_endpoint();
+	};
 
 	// more details at http://docs.thinger.io/arduino/
+	
 }
 
 void loop() {
 	thing.handle();
+	if (speed1>150 & emailsent==0)
+	{
+		emailsent = 1;
+		call_temperature_endpoint();
+		// call endpoint
+	}
+		
+
+}
+
+void call_temperature_endpoint() 
+{	digitalWrite(LED_BUILTIN, LOW);
+	pson tweet_content;
+	tweet_content["value1"] = Idcompteur;
+	tweet_content["value2"] = millis();
+	thing.call_endpoint("emailtest", tweet_content);
+	digitalWrite(LED_BUILTIN, HIGH);
 }
