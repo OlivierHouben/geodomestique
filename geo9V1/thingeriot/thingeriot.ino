@@ -33,8 +33,11 @@ SoftwareSerial Serial1(7,8); // RX, TX
 
 #define Idcompteur 001
 ThingerTinyGSM thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL, Serial1);
+
 int speed1;
+
 bool emailsent;
+
 void setup() {
 	// uncomment line for debug
 	 Serial.begin(9600);
@@ -51,6 +54,7 @@ void setup() {
 
 	// resource input example (i.e, controlling a digitalPin);
 	pinMode(LED_BUILTIN, OUTPUT);
+
 	thing["led"] << [](pson& in) {
 		digitalWrite(13, in ? HIGH : LOW);
 	};
@@ -72,9 +76,9 @@ void setup() {
 void loop() {
 	thing.handle();
 	if (speed1>150 & emailsent==0)
-	{
-		emailsent = 1;
+	{		
 		call_temperature_endpoint();
+		emailsent = 1;
 		// call endpoint
 	}
 		
@@ -82,10 +86,14 @@ void loop() {
 }
 
 void call_temperature_endpoint() 
-{	digitalWrite(LED_BUILTIN, LOW);
+{	
+	digitalWrite(LED_BUILTIN, LOW);
 	pson tweet_content;
+
 	tweet_content["value1"] = Idcompteur;
 	tweet_content["value2"] = millis();
+
 	thing.call_endpoint("emailtest", tweet_content);
 	digitalWrite(LED_BUILTIN, HIGH);
+
 }
