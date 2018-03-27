@@ -11,6 +11,7 @@ void setup() {
 	//trois
 	// 4
 	// 5
+	//6
 }
 
 // the loop function runs over and over again until power down or reset
