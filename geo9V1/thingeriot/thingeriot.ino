@@ -18,9 +18,9 @@
 SoftwareSerial Serial1(7,8); // RX, TX
 #endif
 
-#define USERNAME "houbeno"
-#define DEVICE_ID "arduino"
-#define DEVICE_CREDENTIAL "sisisi"
+#define USERNAME "GeoelecTest052"
+#define DEVICE_ID "Arduino_Olivier"
+#define DEVICE_CREDENTIAL "sisisu"
 
 								// use your own APN config
 #define APN_NAME "internet.proximus.be"
