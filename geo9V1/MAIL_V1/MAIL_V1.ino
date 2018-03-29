@@ -1,7 +1,7 @@
 /*
- Name:		MAIL_V1.ino
- Created:	27/03/2018 15:27:42
- Author:	Florian, Olivier
+Name:		MAIL_V1.ino
+Created:	27/03/2018 15:27:42
+Author:	Florian, Olivier
 */
 
 /* Pin used
@@ -40,6 +40,10 @@ SoftwareSerial Serial1(7, 8);
 #include "EmonLib.h"
 
 
+// Define device parameters
+
+// Olivier
+/*
 // Define device
 #define USERNAME "houbeno"
 #define DEVICE_ID "arduino"
@@ -52,9 +56,27 @@ SoftwareSerial Serial1(7, 8);
 
 // Define cad pin (optional)
 #define CARD_PIN ""
+*/
+
+// Florian
+// /*
+// Define device
+#define USERNAME "GeoelecTest052"
+#define DEVICE_ID "arduino_baw_0001"
+#define DEVICE_CREDENTIAL "sisisi"
+
+// Define APN config
+#define APN_NAME "gprs.base.be"
+#define APN_USER "base"
+#define APN_PSWD "base"
+
+// Define cad pin (optional)
+#define CARD_PIN ""
+// */
 
 // Define id compteur
 #define Idcompteur 001
+#define IdDoor 001
 
 // Create instance EnergyMonitor
 EnergyMonitor emon1;
@@ -74,6 +96,7 @@ float realpower[3] = { 0,0,0 };
 volatile float Irmstableau[4] = { 0, 0,0,0 };
 volatile float Vrmstableau[3] = { 0,0,0 };
 volatile float kilos[3] = { 0,0,0 };
+volatile float kilosTot = 0;
 
 // Current
 float Irms1;
@@ -94,7 +117,7 @@ int positionOFF = -1;
 int positionON = -1;
 
 // Relay connected to pin 13
-// const int relay = 13;
+const int relay = 13;
 
 // Configure software serial port
 // Attention 2 fois les mêmes pins pour le software serial SIM900 et le Serial1
@@ -106,6 +129,8 @@ ThingerTinyGSM thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL, Serial1);
 int speed1;
 
 bool emailsent;
+
+int tp_2;
 
 void setup() {
 	// Initializing serial commmunication
@@ -123,13 +148,7 @@ void setup() {
 
 	emailsent = 0;
 	speed1 = 0;
-
-	// Set relay as OUTPUT
-	// pinMode(relay, OUTPUT);
-
-	// By default the relay is off
-	// digitalWrite(relay, HIGH);
-
+	tp_2 = 0;
 
 	previoustime = millis();
 
@@ -146,21 +165,34 @@ void setup() {
 	// resource input example (i.e, controlling a digitalPin);
 	pinMode(LED_BUILTIN, OUTPUT);
 
-	
+	// Set relay as OUTPUT
+	pinMode(relay, OUTPUT);
 
-	thing["led"] << [](pson& in) {
-		digitalWrite(13, in ? HIGH : LOW);
+	// By default the relay is off
+	// digitalWrite(relay, HIGH);
+
+
+	thing["relay"] << [](pson& in) {
+		if (in.is_empty())
+		{
+			in = (bool)digitalRead(relay);
+		}
+		else
+		{
+			digitalWrite(relay, in ? HIGH : LOW);
+		}
+		//digitalWrite(13, in ? HIGH : LOW);
 	};
 
 
 	thing["SPEED"] << inputValue(speed1, {});
-	thing["emailsent"] << inputValue(emailsent, {});
-	thing["emailsentout"] >> outputValue(emailsent);
+	//thing["emailsent"] << inputValue(emailsent, {});
+	//thing["emailsentout"] >> outputValue(emailsent);
 	// resource output example (i.e. reading a sensor value)
 	thing["millis"] >> outputValue(millis());
-	thing["tweet_test"] = []() {
-		call_temperature_endpoint();
-	};
+	//thing["tweet_test"] = []() {
+		//call_temperature_endpoint();
+	//};
 
 	// more details at http://docs.thinger.io/arduino/
 
@@ -173,9 +205,22 @@ void loop() {
 
 	thing.handle();
 
+	if (speed1 > 200 & tp_2 == 0)
+	{
+		tp_2 = 1;
+
+		pson data_alert;
+		data_alert["door_nbr"] = IdDoor;
+		data_alert["time"] = millis();
+
+		// Endpoint
+		thing.call_endpoint("emailtest", data_alert);
+
+	}
+
 	if (speed1>150 & emailsent == 0)
 	{
-		call_temperature_endpoint();
+		//call_temperature_endpoint();
 		emailsent = 1;
 		// call endpoint
 
@@ -187,6 +232,7 @@ void loop() {
 		data["NRJ1(kwh)"] = kilos[0];
 		data["NRJ2(khw)"] = kilos[1];
 		data["NRJ3(khw)"] = kilos[2];
+		data["NRJTot(khw)"] = kilos[0] + kilos[1] + kilos[2];
 
 		// Current
 		data["Irms1(A)"] = Irmstableau[0];
@@ -194,11 +240,11 @@ void loop() {
 		data["Irms3(A)"] = Irmstableau[2];
 
 		// Voltage
-		data["Vrms(A)"] = Vrmstableau[0];
+		data["Vrms(V)"] = Vrmstableau[0];
 
 		// Data Bucket
 		// For using the write_bucket call over a bucket, it is necessary to set the bucket source to "From Write Call"
-		//thing.write_bucket("BucketId", data);
+		thing.write_bucket("BucketBaw001", data);
 
 		// Pas bien compris son fonctionnement
 		// ESP.deepSleep(SLEEP_MS*1000, WAKE_RF_DEFAULT); 
@@ -224,7 +270,7 @@ void call_temperature_endpoint()
 }
 
 
-void readPhase()  
+void readPhase()
 {
 	// Method to read information from CTs
 
@@ -237,7 +283,7 @@ void readPhase()
 	// Irms
 	Irms1 = emon1.calcIrms(1480);
 	Irms2 = emon2.calcIrms(1480);
-	Irms3 = emon3.calcIrms(1480); 
+	Irms3 = emon3.calcIrms(1480);
 
 	// Real power
 	realpower[0] = emon1.realPower;
@@ -262,7 +308,7 @@ void readPhase()
 	{
 		// Calculate kilowatt hours used
 		// Attention peut être en Wh et pas en kWh
-		kilos[i] = kilos[i] + (realpower[i] * (time / 3600 / 1000));    
+		kilos[i] = kilos[i] + (realpower[i] * (time / 3600 / 1000));
 	}
 
 	startMillis = millis();
