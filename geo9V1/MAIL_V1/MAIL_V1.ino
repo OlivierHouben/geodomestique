@@ -23,7 +23,7 @@ A4	Voltage
 //#define TINY_GSM_MODEM_M590
 
 // uncomment line for debug
-#define _DEBUG_
+//#define _DEBUG_
 
 // Can be installed from Library Manager or https://github.com/vshymanskyy/TinyGSM
 #include <TinyGsmClient.h>
@@ -76,7 +76,7 @@ SoftwareSerial Serial1(7, 8);
 
 // Define id compteur
 #define Idcompteur 001
-#define IdDoor 001
+//#define IdDoor 001
 
 // Create instance EnergyMonitor
 EnergyMonitor emon1;
@@ -95,8 +95,8 @@ float realpower[3] = { 0,0,0 };
 // Current, voltage, kW
 volatile float Irmstableau[4] = { 0, 0,0,0 };
 volatile float Vrmstableau[3] = { 0,0,0 };
-volatile float kilos[3] = { 0,0,0 };
-volatile float kilosTot = 0;
+volatile float kilos[4] = { 0,0,0,0 };
+//volatile float kilosTot = 0;
 
 // Current
 float Irms1;
@@ -126,11 +126,12 @@ const int relay = 13;
 
 ThingerTinyGSM thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL, Serial1);
 
-int speed1;
+int voltage1;
+int sendemail1;
 
 bool emailsent;
 
-int tp_2;
+//int tp_2;
 
 void setup() {
 	// Initializing serial commmunication
@@ -147,8 +148,9 @@ void setup() {
 	// thing.setPIN(CARD_PIN);
 
 	emailsent = 0;
-	speed1 = 0;
-	tp_2 = 0;
+	voltage1 = 0;
+	sendemail1 = 0;
+	//tp_2 = 0;
 
 	previoustime = millis();
 
@@ -172,7 +174,7 @@ void setup() {
 	// digitalWrite(relay, HIGH);
 
 
-	thing["relay"] << [](pson& in) {
+	thing["Relay"] << [](pson& in) {
 		if (in.is_empty())
 		{
 			in = (bool)digitalRead(relay);
@@ -184,28 +186,71 @@ void setup() {
 		//digitalWrite(13, in ? HIGH : LOW);
 	};
 
+	thing["KillArduino"] << [](pson& in) {
+		if (in.is_empty())
+		{
+			in = (bool)digitalRead(relay);
+			// in = currentState
+		}
+		else
+		{
+			// kill the arduino
+			//currentState = in;
+		}
+	};
+	thing["activateSMS"] << [](pson& in) {
+		String nbr = in["nbr"];
+		int sendsms = in["sendsms"];
+	};
 
-	thing["SPEED"] << inputValue(speed1, {});
+	thing["voltage"] << inputValue(voltage1, {});
+
+	thing["sendemail"] << inputValue(sendemail1, {});
+
+	thing["millis"] >> outputValue(millis());
+
+	// thing["TotalEnergy"] >> outputValue(kilos[3]);
+
+	thing["AllEnergy"] >> [](pson& out) {
+		out["NRJ1"] = kilos[0];
+		out["NRJ2"] = kilos[1];
+		out["NRJ3"] = kilos[2];
+		out["NRJT"] = kilos[3];
+	};
+
+	thing["TotalEnergy"] >> [](pson& out) {
+		out = kilos[3];
+	};
+
+	thing["AllData"] >> [](pson& out) {
+		out["ID_Meter"] = Idcompteur;
+		out["NRJ1"] = kilos[0];
+		out["NRJ2"] = kilos[1];
+		out["NRJ3"] = kilos[2];
+		out["NRJT"] = kilos[3];
+		out["Irms1"] = Irmstableau[0];
+		out["Irms2"] = Irmstableau[1];
+		out["Irms3"] = Irmstableau[2];
+		out["Vrms"] = Vrmstableau[0];
+	};
+
 	//thing["emailsent"] << inputValue(emailsent, {});
 	//thing["emailsentout"] >> outputValue(emailsent);
-	// resource output example (i.e. reading a sensor value)
-	thing["millis"] >> outputValue(millis());
+
 	//thing["tweet_test"] = []() {
 		//call_temperature_endpoint();
 	//};
-
-	// more details at http://docs.thinger.io/arduino/
-
 }
 
 void loop() {
 
+	//delay(500);
 	// Read the all variables
 	readPhase();
 
 	thing.handle();
 
-	if (speed1 > 200 & tp_2 == 0)
+	/*if (voltage1 > 200 & tp_2 == 0)
 	{
 		tp_2 = 1;
 
@@ -217,8 +262,8 @@ void loop() {
 		thing.call_endpoint("emailtest", data_alert);
 
 	}
-
-	if (speed1>150 & emailsent == 0)
+	*/
+	if (voltage1>150 & emailsent == 0)
 	{
 		//call_temperature_endpoint();
 		emailsent = 1;
@@ -230,9 +275,10 @@ void loop() {
 
 		// Energy kWh
 		data["NRJ1(kwh)"] = kilos[0];
-		data["NRJ2(khw)"] = kilos[1];
-		data["NRJ3(khw)"] = kilos[2];
-		data["NRJTot(khw)"] = kilos[0] + kilos[1] + kilos[2];
+		data["NRJ2(kwh)"] = kilos[1];
+		//data["NRJ3(kwh)"] = kilos[2];
+		data["NRJTot(kwh)"] = kilos[3];
+		//data["NRJTot"] = kilosTot;
 
 		// Current
 		data["Irms1(A)"] = Irmstableau[0];
@@ -246,11 +292,14 @@ void loop() {
 		// For using the write_bucket call over a bucket, it is necessary to set the bucket source to "From Write Call"
 		thing.write_bucket("BucketBaw001", data);
 
+		//thing.write_bucket("BucketBaw001", thing["AllData"]);
+		//thing.write_bucket("BucketBaw001", "AllData");
+
 		// Pas bien compris son fonctionnement
 		// ESP.deepSleep(SLEEP_MS*1000, WAKE_RF_DEFAULT); 
 
 		// Endpoint
-		// thing.call_endpoint("emailtest", data);
+		thing.call_endpoint("EndPointBaw001", data);
 	}
 
 
@@ -306,10 +355,30 @@ void readPhase()
 	unsigned long time = (endMillis - startMillis);
 	for (int i = 0; i <= 2; i++)
 	{
+		//Serial.println("");
+		//Serial.println("kilos i initiale");
+		//Serial.println(kilos[i]);
+		// kilos[i] = kilos[i] + 1;
 		// Calculate kilowatt hours used
 		// Attention peut être en Wh et pas en kWh
+		//kilos[i] = kilos[i] + (realpower[i] * (time /3600));
+
 		kilos[i] = kilos[i] + (realpower[i] * (time / 3600 / 1000));
+
+		//Serial.println("");
+		//Serial.println("kilos i calc");
+		//Serial.println(kilos[i]);
+
+		kilos[3] = kilos[3] + kilos[i];
+
+		//Serial.println("");
+		//Serial.println("kilos 3");
+		//Serial.println(kilos[3]);
 	}
+
+	//kilos[3] = kilos[0];
+
+	
 
 	startMillis = millis();
 
