@@ -27,7 +27,7 @@ float Irms1;
 float Irms2;
 float Irms3;
 // Configure software serial port
-SoftwareSerial SIM900(7, 8);
+SoftwareSerial SIM900(8, 7);
 
 // Variable to store text message
 String textMessage;
@@ -44,7 +44,7 @@ const int relay = 13;
 unsigned long previoustime = 0;
 unsigned long currenttime = 0;
 
-unsigned int interval = 30000;
+unsigned int interval = 60000;
 
 
 int positionOFF = -1;
@@ -61,7 +61,7 @@ void setup() {
 
 	// Initializing serial commmunication
 	Serial.begin(9600);
-	SIM900.begin(19200);
+	SIM900.begin(9600);
 
 	// Give time to your GSM shield log on to network
 	delay(7000);
@@ -69,9 +69,11 @@ void setup() {
 
 	// AT command to set SIM900 to SMS mode
 	SIM900.print("AT+CMGF=1\r");
+	//SIM900.println("AT+CMGF=1\r");
 	delay(100);
 	// Set module to send SMS data to serial out upon receipt 
-	SIM900.print("AT+CNMI=2,2,0,0,0\r");
+	//SIM900.print("AT+CNMI=2,2,0,0,0\r");
+	SIM900.println("AT+CNMI=2,2,0,0,0\r");
 	delay(100);
 
 	digitalWrite(13, HIGH);
@@ -158,7 +160,7 @@ void Sendinfodata()
 	message.concat(IDMETER);
 	message.concat(";");
 	// partie kilos
-	message.concat("NRJ1(kwh)");
+	/*message.concat("NRJ1(kwh)");
 	message.concat(";");
 	message.concat(kilos[0]);
 	message.concat(";");
@@ -190,12 +192,12 @@ void Sendinfodata()
 	message.concat(";");
 
 
-
+	*/
 	Serial.println("");
 	Serial.println("Message sms");
 	Serial.println(message);
-	Serial.println("valeur input");
-	Serial.println(analogRead(emoncurrentPins[0]));
+	//Serial.println("valeur input");
+	//Serial.println(analogRead(emoncurrentPins[0]));
 	
 
 	sendSMS(message);
@@ -234,7 +236,7 @@ void readPhase()      //Method to read information from CTs
 	}
 	
 	startMillis = millis();
-	Serial.println("");
+	/*Serial.println("");
 	Serial.println("valeur dans read phase");
 	Serial.print(" ancienne IRMS2  ");
 	Serial.println(Irms2);
@@ -256,7 +258,7 @@ void readPhase()      //Method to read information from CTs
 	Serial.print("kilos2  ");
 	Serial.println(kilos[1]);
 
-
+	*/
 
 
 	
@@ -269,11 +271,13 @@ void readPhase()      //Method to read information from CTs
 void sendSMS(String message) {
 	// AT command to set SIM900 to SMS mode
 	SIM900.print("AT+CMGF=1\r");
+	//SIM900.println("AT+CMGF=1\r");
 	delay(100);
 
 	// REPLACE THE X's WITH THE RECIPIENT'S MOBILE NUMBER
 	// USE INTERNATIONAL FORMAT CODE FOR MOBILE NUMBERS
 	SIM900.println("AT + CMGS = \"0494783233\"");
+	//SIM900.println("AT+CMGS=\"+32494783233\"");
 	delay(100);
 	// Send the SMS
 	SIM900.println(message);
