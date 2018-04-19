@@ -1,69 +1,42 @@
 /*
-Name:		MAIL_V1.ino
-Created:	27/03/2018 15:27:42
-Author:	Florian, Olivier
-*/
+ Name:		MAIL_V2.ino
+ Created:	31/03/2018 11:15:18
+ Author:	Florian
+ Pin used:
+			7	RX
+			8	TX
+			13	led
 
-/* Pin used
-7	RX
-8	TX
-13	led
+			A1	Current1
+			A2	Current2
+			A3	Current3
+			A4	Voltage
+ */
 
-A1	Current1
-A2	Current2
-A3	Current3
-A4	Voltage
-*/
-
-// Select your modem:
+ // Define the modem
 #define TINY_GSM_MODEM_SIM800
-//#define TINY_GSM_MODEM_SIM900
-//#define TINY_GSM_MODEM_A6
-//#define TINY_GSM_MODEM_A7
-//#define TINY_GSM_MODEM_M590
 
-// uncomment line for debug
-//#define _DEBUG_
-
-// Can be installed from Library Manager or https://github.com/vshymanskyy/TinyGSM
+// Include tiny et thinger
 #include <TinyGsmClient.h>
 #include <ThingerTinyGSM.h>
 
-// Emulate Serial1 on pins 10/11 if HW is not present (use interrupt pin in RX for better performance)
+// Emulate Serial1 on pins 10/11 (7,8) if HW is not present (use interrupt pin in RX for better performance)
 #ifndef HAVE_HWSERIAL1
 #include "SoftwareSerial.h"
-// RX, TX
+ // RX, TX
 SoftwareSerial Serial1(7, 8);
 #endif
 
 // Include Emon Library
 #include "EmonLib.h"
 
+// uncomment line for debug
+//#define _DEBUG_
 
-// Define device parameters
-
-// Olivier
-/*
 // Define device
-#define USERNAME "houbeno"
-#define DEVICE_ID "arduino"
-#define DEVICE_CREDENTIAL "sisisi"
-
-// Define APN config
-#define APN_NAME "internet.proximus.be"
-#define APN_USER ""
-#define APN_PSWD ""
-
-// Define cad pin (optional)
-#define CARD_PIN ""
-*/
-
-// Florian
-// /*
-// Define device
-#define USERNAME "GeoelecTest052"
-#define DEVICE_ID "arduino_baw_0001"
-#define DEVICE_CREDENTIAL "sisisi"
+#define USERNAME "GeoelecTest052"		//thinger username
+#define DEVICE_ID "arduino_baw_0001"	// thinger device name
+#define DEVICE_CREDENTIAL "sisisi"		// thinger credential
 
 // Define APN config
 #define APN_NAME "gprs.base.be"
@@ -72,10 +45,11 @@ SoftwareSerial Serial1(7, 8);
 
 // Define cad pin (optional)
 #define CARD_PIN ""
-// */
 
-// Define id compteur
+// Define id meter
 #define Idcompteur 001
+
+// Define id door
 //#define IdDoor 001
 
 // Create instance EnergyMonitor
@@ -83,27 +57,28 @@ EnergyMonitor emon1;
 EnergyMonitor emon2;
 EnergyMonitor emon3;
 
+// Relay connected to pin 13
+const int relay = 13;
+
 // Current Pins
-int emoncurrentPins[3] = { A1,A2,A3 };
+int const emoncurrentPins[3] = {A1,A2,A3};
 
 // Voltage Pins
-// int emonvoltagepins[3]= { a4,a5,a0};
+// int const emonvoltagepins[3]= {A4,A5,A0};
 
 // Real power
-float realpower[3] = { 0,0,0 };
-
+float realpower[3] = {0.00f,0.00f,0.00f};
 // Current, voltage, kW
-volatile float Irmstableau[4] = { 0, 0,0,0 };
-volatile float Vrmstableau[3] = { 0,0,0 };
-volatile float kilos[4] = { 0,0,0,0 };
-//volatile float kilosTot = 0;
+float Irmstableau[4] = {0.00f,0.00f,0.00f,0.00f};
+float Vrmstableau[3] = {0.00f,0.00f,0.00f};
+float kilos[4] = {0.00f,0.00f,0.00f,0.00f};
 
 // Current
 float Irms1;
 float Irms2;
 float Irms3;
 
-// Time
+//Time
 unsigned long startMillis;
 unsigned long endMillis = 0;
 
@@ -116,28 +91,17 @@ unsigned int interval = 30000;
 int positionOFF = -1;
 int positionON = -1;
 
-// Relay connected to pin 13
-const int relay = 13;
-
-// Configure software serial port
-// Attention 2 fois les mêmes pins pour le software serial SIM900 et le Serial1
-//SoftwareSerial SIM900(7, 8);
-
+int volatile voltage1;
+int volatile sendemail1;
+bool volatile emailsent;
 
 ThingerTinyGSM thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL, Serial1);
 
-int voltage1;
-int sendemail1;
-
-bool emailsent;
-
-//int tp_2;
-
+// the setup function runs once when you press reset or power the board
 void setup() {
+
 	// Initializing serial commmunication
-	// Uncomment line for debug
 	Serial.begin(9600);
-	// SIM900.begin(19200);
 	// Serial for AT commands (can be higher with HW Serial, or even lower in SW Serial)
 	Serial1.begin(9600);
 
@@ -186,7 +150,7 @@ void setup() {
 		//digitalWrite(13, in ? HIGH : LOW);
 	};
 
-	thing["KillArduino"] << [](pson& in) {
+	/*thing["KillArduino"] << [](pson& in) {
 		if (in.is_empty())
 		{
 			in = (bool)digitalRead(relay);
@@ -198,31 +162,30 @@ void setup() {
 			//currentState = in;
 		}
 	};
-	thing["activateSMS"] << [](pson& in) {
+	*/
+	/*thing["activateSMS"] << [](pson& in) {
 		String nbr = in["nbr"];
 		int sendsms = in["sendsms"];
 	};
-
+	*/
 	thing["voltage"] << inputValue(voltage1, {});
 
-	thing["sendemail"] << inputValue(sendemail1, {});
+	//thing["sendemail"] << inputValue(sendemail1, {});
 
-	thing["millis"] >> outputValue(millis());
+	//thing["millis"] >> outputValue(millis());
 
-	// thing["TotalEnergy"] >> outputValue(kilos[3]);
+	//thing["TotalEnergy"] >> outputValue(kilos[3]);
 
-	thing["AllEnergy"] >> [](pson& out) {
+	/*thing["AllEnergy"] >> [](pson& out) {
+		out["ID_Meter"] = Idcompteur;
 		out["NRJ1"] = kilos[0];
 		out["NRJ2"] = kilos[1];
 		out["NRJ3"] = kilos[2];
 		out["NRJT"] = kilos[3];
-	};
-
-	thing["TotalEnergy"] >> [](pson& out) {
-		out = kilos[3];
-	};
-
-	thing["AllData"] >> [](pson& out) {
+	};*/
+	
+	thing["TotalNRJ"] >> [](pson& out) {
+		//out = Idcompteur;
 		out["ID_Meter"] = Idcompteur;
 		out["NRJ1"] = kilos[0];
 		out["NRJ2"] = kilos[1];
@@ -233,36 +196,24 @@ void setup() {
 		out["Irms3"] = Irmstableau[2];
 		out["Vrms"] = Vrmstableau[0];
 	};
+	
+	/*thing["AllData"] >> [](pson& out) {
+		out["ID_Meter"] = Idcompteur;
+		out["NRJT"] = kilos[3];
+		out["Irms1"] = Irmstableau[0];
+		out["Irms2"] = Irmstableau[1];
+		out["Irms3"] = Irmstableau[2];
+		out["Vrms"] = Vrmstableau[0];
+	};*/
 
-	//thing["emailsent"] << inputValue(emailsent, {});
-	//thing["emailsentout"] >> outputValue(emailsent);
-
-	//thing["tweet_test"] = []() {
-		//call_temperature_endpoint();
-	//};
 }
 
+// the loop function runs over and over again until power down or reset
 void loop() {
-
-	//delay(500);
-	// Read the all variables
-	readPhase();
+	//readPhase();
 
 	thing.handle();
 
-	/*if (voltage1 > 200 & tp_2 == 0)
-	{
-		tp_2 = 1;
-
-		pson data_alert;
-		data_alert["door_nbr"] = IdDoor;
-		data_alert["time"] = millis();
-
-		// Endpoint
-		thing.call_endpoint("emailtest", data_alert);
-
-	}
-	*/
 	if (voltage1>150 & emailsent == 0)
 	{
 		//call_temperature_endpoint();
@@ -301,23 +252,7 @@ void loop() {
 		// Endpoint
 		thing.call_endpoint("EndPointBaw001", data);
 	}
-
-
 }
-
-void call_temperature_endpoint()
-{
-	digitalWrite(LED_BUILTIN, LOW);
-	pson tweet_content;
-
-	tweet_content["value1"] = Idcompteur;
-	tweet_content["value2"] = millis();
-
-	thing.call_endpoint("emailtest", tweet_content);
-	digitalWrite(LED_BUILTIN, HIGH);
-
-}
-
 
 void readPhase()
 {
@@ -378,32 +313,5 @@ void readPhase()
 
 	//kilos[3] = kilos[0];
 
-	
-
 	startMillis = millis();
-
-	// Use to debug
-	/*
-	Serial.println("");
-	Serial.println("valeur dans read phase");
-	Serial.print(" ancienne IRMS2  ");
-	Serial.println(Irms2);
-	Serial.print("emon1 Irms   ");
-	Serial.println(emon1.Irms);
-	Serial.print("apparent power  emon   ");
-	Serial.println(emon1.apparentPower);
-	Serial.print("realpower2 ancienne ");
-	Serial.println(realpower[1]);
-	Serial.print("voltage emon  ");
-	Serial.println(Vrmstableau[0]);
-
-	Serial.print("verif real power emon  ");
-	Serial.println(Irms1*emon1.Vrms);
-
-	Serial.print("kilos1  ");
-	Serial.println(kilos[0]);
-
-	Serial.print("kilos2  ");
-	Serial.println(kilos[1]);
-	*/
 }
