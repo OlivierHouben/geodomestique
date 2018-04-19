@@ -99,7 +99,7 @@ int volatile sendemail1;
 bool volatile emailsent;
 
 String txtsms;
-char* numAuth[] = { "+32494783233","+32494181048" };
+char* numAuth[] = { "+num1","+num2" };
 
 //TinyGsm modem(SerialAT);
 //TinyGsmClient client(modem);
@@ -214,7 +214,7 @@ void loop() {
 
 		time_now = millis();
 
-		//modemS.sendSMS("+32494783233", smsrecu);
+		//modemS.sendSMS("+num", smsrecu);
 
 		// Data Bucket
 		// For using the write_bucket call over a bucket, it is necessary to set the bucket source to "From Write Call"

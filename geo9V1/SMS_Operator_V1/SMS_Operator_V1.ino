@@ -1,5 +1,5 @@
 #include <SoftwareSerial.h>
-char* numAuth[] = { "+32494783233","+32494181048" };
+char* numAuth[] = { "+num1","+num2" };
 SoftwareSerial SerialATM(8, 7);
 //String txtsms;
 

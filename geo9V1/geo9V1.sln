@@ -47,6 +47,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IOT_V9", "IOT_V9\IOT_V9.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SMS_Operator_V1", "SMS_Operator_V1\SMS_Operator_V1.vcxproj", "{EB750C80-E22C-4C9C-B500-1D800EA27FE7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HTTP_V1", "HTTP_V1\HTTP_V1.vcxproj", "{501B2E8C-3734-4BCF-B5DF-F4D30D74217C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -141,6 +143,10 @@ Global
 		{EB750C80-E22C-4C9C-B500-1D800EA27FE7}.Debug|x86.Build.0 = Debug|Win32
 		{EB750C80-E22C-4C9C-B500-1D800EA27FE7}.Release|x86.ActiveCfg = Release|Win32
 		{EB750C80-E22C-4C9C-B500-1D800EA27FE7}.Release|x86.Build.0 = Release|Win32
+		{501B2E8C-3734-4BCF-B5DF-F4D30D74217C}.Debug|x86.ActiveCfg = Debug|Win32
+		{501B2E8C-3734-4BCF-B5DF-F4D30D74217C}.Debug|x86.Build.0 = Debug|Win32
+		{501B2E8C-3734-4BCF-B5DF-F4D30D74217C}.Release|x86.ActiveCfg = Release|Win32
+		{501B2E8C-3734-4BCF-B5DF-F4D30D74217C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

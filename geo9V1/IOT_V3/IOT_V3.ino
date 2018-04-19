@@ -99,7 +99,7 @@ int volatile sendemail1;
 bool volatile emailsent;
 
 String txtsms;
-char* numAuth[] = { "+32494783233","+32494181048" };
+char* numAuth[] = { "+num1","+num2" };
 
 //TinyGsm modem(SerialAT);
 //TinyGsmClient client(modem);
@@ -223,7 +223,7 @@ void loop() {
 		time_now = millis();
 		//Serial1.print("AT+CNMI=2,2,0,0,0\r");
 		//delay(100);
-		modemS.sendSMS("+32494783233", smsrecu);
+		modemS.sendSMS("+num1", smsrecu);
 
 		//thing.handle();
 	}

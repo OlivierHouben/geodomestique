@@ -200,8 +200,7 @@ void setup() {
 	};
 
 	// Send sms (number, texte)
-	//modem.sendSMS("+32494181048", "Coucou petite peruche");
-	//modem.sendSMS("+32494783233", "Coucou petite peruche");
+	//modem.sendSMS("num", "text");
 }
 
 // the loop function runs over and over again until power down or reset
@@ -226,7 +225,7 @@ void loop() {
 		// AT command to set module to send SMS data to serial out upon receipt 
 		SerialAT.print("AT+CNMI=2,2,0,0,0\r");
 		delay(100);
-		modem.sendSMS("+32494783233", "Coucou petite peruche");
+		modem.sendSMS("+num", "text");
 		thing.handle();
 	}*/
 

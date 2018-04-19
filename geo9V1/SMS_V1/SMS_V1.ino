@@ -170,8 +170,8 @@ void sendSMS(String message) {
 	delay(100);
 
 	// RECIPIENT'S MOBILE NUMBER
-	SIM900.println("AT + CMGS = \"0494783233\"");
-	//SIM900.println("AT + CMGS = \"0483334832\"");
+	SIM900.println("AT + CMGS = \"num\"");
+	//SIM900.println("AT + CMGS = \"num\"");
 	delay(100);
 
 	// Send the SMS

@@ -106,8 +106,7 @@ void setup() {
 	delay(100);
 
 	// Send sms (number, texte)
-	//modem.sendSMS("+32494181048", "Coucou petite peruche");
-	//modem.sendSMS("+32494783233", "Coucou petite peruche");
+	//modem.sendSMS("+num", "txt");
 
 	// set PIN (optional)
 	// thing.setPIN(CARD_PIN);
