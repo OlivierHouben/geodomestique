@@ -16,11 +16,11 @@ A4	Voltage
 // Define the modem
 #define TINY_GSM_MODEM_SIM800
 #define SerialMon Serial
-#define SerialAT Serial1
+//#define SerialAT Serial1
 
 // Include tiny et thinger
 #include <TinyGsmClient.h>
-
+/*
 // Emulate Serial1 on pins 10/11 (7,8) if HW is not present (use interrupt pin in RX for better performance)
 #ifndef HAVE_HWSERIAL1
 #include "SoftwareSerial.h"
@@ -28,7 +28,11 @@ A4	Voltage
 //SoftwareSerial Serial1(8, 7);
 SoftwareSerial SerialAT(8, 7);
 #endif
-
+*/
+#include "SoftwareSerial.h"
+// RX, TX
+//SoftwareSerial Serial1(8, 7);
+SoftwareSerial SerialAT(11, 10);
 String text_sms;
 
 // uncomment line for debug
@@ -106,7 +110,7 @@ void setup() {
 	delay(100);
 
 	// Send sms (number, texte)
-	//modem.sendSMS("+num", "txt");
+	//modem.sendSMS("+", "Coucou petite peruche");
 
 	// set PIN (optional)
 	// thing.setPIN(CARD_PIN);
