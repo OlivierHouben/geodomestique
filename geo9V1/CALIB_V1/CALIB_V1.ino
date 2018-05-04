@@ -57,7 +57,7 @@ void setup() {
 	emon1.current(emoncurrentPins[0], 29.1);
 	emon2.current(emoncurrentPins[1], 29.1);
 	emon3.current(emoncurrentPins[2], 29.1);
-
+	startMillis = millis();
 	// startMillis = millis();
 }
 
@@ -74,8 +74,7 @@ void loop() {
 
 void readPhase()
 {
-	// Method to read information from CTs
-	startMillis = millis();
+	
 
 	// Calculate all. No.of half wavelengths (crossings), time-out
 	emon1.calcVI(20, 2000);
@@ -103,7 +102,9 @@ void readPhase()
 	Vrmstableau[2] = emon1.Vrms;
 
 	endMillis = millis();
-	unsigned long time = (endMillis - startMillis);
+	unsigned long time = (endMillis - startMillis); // pas realiste il faut prendre en compte le temps qui s'ecoule dans la boucle principale
+													// Method to read information from CTs
+	startMillis = millis();
 	// Calculate kilowatt hours used
 	// Careful in Wh and not in kWh
 	//kilos[i] = kilos[i] + (realpower[i] * (time /3600));
