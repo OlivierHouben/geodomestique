@@ -232,7 +232,7 @@ void loop() {
 
 		time_now = millis();
 
-		//modemS.sendSMS("+num", smsrecu);
+		//modemS.sendSMS("+", "test");
 
 		// Data Bucket
 		// For using the write_bucket call over a bucket, it is necessary to set the bucket source to "From Write Call"

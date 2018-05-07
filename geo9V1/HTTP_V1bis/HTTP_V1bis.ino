@@ -92,7 +92,7 @@ void setup() {
 
 	// Attention pas d'espace dans les champs d'envoie sinon message d'erreur il faut supprimer les espaces des mails qu'on va envoyer à la bd
 
-	String idg = "arduinotest2";
+	String idg = "arduinotest";
 	float nrjtot = 33;
 	float p1 = 12.412;
 	float p2 = 14.412;
@@ -107,7 +107,7 @@ void setup() {
 	String lat = "test%20lat";
 	String lon = "test%20lon";
 	String pay = "true";
-	
+
 	res.concat("idg=");
 	res.concat(idg);
 	res.concat("&nrj=");
@@ -161,50 +161,54 @@ void loop() {
 		return;
 	}
 	SerialMon.println(" OK");
-	
+
 	SerialMon.print(F("Performing HTTP GET request... "));
 	int err = http.get(res);
-	
+	http.stop();
+	SerialMon.print(F("Performing HTTP GET request... "));
+	err = http.get(res);
+	/*
 	if (err != 0) {
-		SerialMon.println(F("failed to connect"));
-		delay(10000);
-		return;
+	SerialMon.println(F("failed to connect"));
+	delay(10000);
+	return;
 	}
-	
-	 //La methode post ne fonctionne pas
+	*/
+
+	//La methode post ne fonctionne pas
 
 	//SerialMon.print(F("Performing HTTP POST request... "));
 	// test 1 NOK
 	//http.post("/db19/?id=17&nom=arduino");
-
+	/*
 	int status = http.responseStatusCode();
 	SerialMon.println(status);
 	if (!status) {
-		delay(10000);
-		return;
+	delay(10000);
+	return;
 	}
 
 	while (http.headerAvailable()) {
-		String headerName = http.readHeaderName();
-		String headerValue = http.readHeaderValue();
-		//SerialMon.println(headerName + " : " + headerValue);
+	String headerName = http.readHeaderName();
+	String headerValue = http.readHeaderValue();
+	//SerialMon.println(headerName + " : " + headerValue);
 	}
-
+	*/
 	/*
 	int length = http.contentLength();
 	if (length >= 0) {
-		SerialMon.print(F("Content length is: "));
-		SerialMon.println(length);
+	SerialMon.print(F("Content length is: "));
+	SerialMon.println(length);
 	}
 	if (http.isResponseChunked()) {
-		SerialMon.println(F("The response is chunked"));
+	SerialMon.println(F("The response is chunked"));
 	}
 	*/
-
+	/*
 	String body = http.responseBody();
 	SerialMon.println(F("Response:"));
 	SerialMon.println(body);
-
+	*/
 	/*
 	SerialMon.print(F("Body length is: "));
 	SerialMon.println(body.length());
@@ -216,25 +220,25 @@ void loop() {
 	err = http.get(res);
 
 	if (err != 0) {
-		SerialMon.println(F("failed to connect1"));
-		delay(10000);
-		return;
+	SerialMon.println(F("failed to connect1"));
+	delay(10000);
+	return;
 	}
 	*/
 	//if we want to have the answer we have to wait the return to do that we use that :
 	/*
-		while (http.headerAvailable()) {
-		String headerName = http.readHeaderName();
-		String headerValue = http.readHeaderValue();
-		//SerialMon.println(headerName + " : " + headerValue);
-		}
+	while (http.headerAvailable()) {
+	String headerName = http.readHeaderName();
+	String headerValue = http.readHeaderValue();
+	//SerialMon.println(headerName + " : " + headerValue);
+	}
 	*/
 
 	// So we can listen the answer with that :
 	/*
-		String body = http.responseBody();
-		SerialMon.println(F("Response:"));
-		SerialMon.println(body);
+	String body = http.responseBody();
+	SerialMon.println(F("Response:"));
+	SerialMon.println(body);
 	*/
 
 	// Shutdown
@@ -244,21 +248,9 @@ void loop() {
 
 	modem.gprsDisconnect();
 	SerialMon.println(F("GPRS disconnected"));
-	int ramval;
-	ramval = freeRam();
-
-	SerialMon.println(ramval);
 
 	// Do nothing forevermore
 	while (true) {
 		delay(1000);
 	}
-}
-
-
-int freeRam()
-{
-	extern int __heap_start, *__brkval;
-	int v;
-	return (int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval);
 }
