@@ -224,8 +224,8 @@ void loop() {
 
 			HTTPRequest(0);
 
-			modem.sendSMS("+32494783233", "Coucou petite peruche");
-			//modem.sendSMS("+3294783233", "test");
+			//modem.sendSMS("+", "Coucou petite peruche");
+			//modem.sendSMS("+", "test");
 		}
 
 		if (SerialAT.available() > 0)

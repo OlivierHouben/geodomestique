@@ -1,19 +1,16 @@
 /*
-Name:		HTTP_SMS_EMON_HEROKU_1.ino
-Created:	01/05/2018 11:05:21
+Name:		GPS_1.ino
+Created:	06/05/2018 11:24:41
 Author:	Florian
 */
 
 #define TINY_GSM_MODEM_SIM800
+#define SerialMon Serial
 
-// Increase RX buffer if needed
-//#define TINY_GSM_RX_BUFFER 512 
-
-#include <TinyGsmClient.h>
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
 #include <ArduinoHttpClient.h>
-#include <TinyGPS.h>
-
-// Include Emon Library
+#include <TinyGsmClient.h>
 #include "EmonLib.h"
 
 // Create instance EnergyMonitor
@@ -68,51 +65,41 @@ char* numAuth[] = { "+num1","+num2" };
 float flat = 0.00f;
 float flon = 0.00f;
 
+static const int RXPin = 13, TXPin = 12;
+static const uint32_t GPSBaud = 9600;
+int doitonces = 0;
 
-// Uncomment this if you want to see all AT commands
-//#define DUMP_AT_COMMANDS
+//#define ss Serial1
 
-// Set serial for debug console (to the Serial Monitor, default speed 115200)
-#define SerialMon Serial
+// The TinyGPS++ object
+TinyGPSPlus gps;
 
-// Use Hardware Serial on Mega, Leonardo, Micro
-//#define SerialAT Serial1
+// The serial connection to the GPS device
+SoftwareSerial SerialAT(11, 10);
+SoftwareSerial ss(13, 12);
 
-// or Software Serial on Uno, Nano
-#include <SoftwareSerial.h>
-//SoftwareSerial SerialAT(8, 7); // RX, TX
-SoftwareSerial SerialAT(11, 10); // RX, TX
 const char apn[] = "gprs.base.be";
 const char user[] = "base";
 const char pass[] = "base";
 
 const char server[] = "geoelec-vault.herokuapp.com";
-// don't support space in send received 505 message error si space put %20
-//const char resource[] = "/db15/?id=77&nom=test%20arduino%20ap";
-//const String resource = "/generator_frame_test_i/?idg=323test&nrj=41.11&p1=10.57&p2=3&p3=0.514&c1=6.4&c2=7&c3=8&vol=10.4&r1=true&r2=true&mag=true&lat=tlt&lon=tlg&pay=true";
 const int  port = 80;
 String res = "/generator_frame_i_mega/?";
 String imei;
-// /generator_frame_test_i/?";
-// generator_frame_i_mega/?
-#ifdef DUMP_AT_COMMANDS
-#include <StreamDebugger.h>
-StreamDebugger debugger(SerialAT, SerialMon);
-TinyGsm modem(debugger);
-#else
 TinyGsm modem(SerialAT);
-#endif
-
 TinyGsmClient client(modem);
 HttpClient http(client, server, port);
-TinyGPS gps;
 
-void setup() {
-	// Set console baud rate
-	SerialMon.begin(115200);
-	delay(10);
+void setup()
+{
+	SerialMon.begin(9600);
+	while (!SerialMon) {
+		; // wait for serial port to connect. Needed for native USB port only
+	}
+	//delay(10);
 
 	// Set GSM module baud rate
+	ss.begin(9600);
 	SerialAT.begin(9600);
 	delay(3000);
 
@@ -156,79 +143,20 @@ void setup() {
 	//modem.simUnlock("1234");
 }
 
-void loop() {
+void loop()
+{
+	
 
-	CreateFrame();
-
-	SerialMon.print(F("Waiting for network..."));
-	if (!modem.waitForNetwork()) {
-		SerialMon.println(" fail");
-		delay(10000);
-		return;
-	}
-	SerialMon.println(" OK");
-
-	SerialMon.print(F("Connecting to "));
-	SerialMon.print(apn);
-	if (!modem.gprsConnect(apn, user, pass)) {
-		SerialMon.println(" fail");
-		delay(10000);
-		return;
-	}
-	SerialMon.println(" OK");
-
-	// HTTPRequest(0);
-
-
-	// Shutdown
-
-
-	//modem.gprsDisconnect();
-	//SerialMon.println(F("GPRS disconnected"));
-
-	// Do nothing forevermore
 	while (true) {
 
 		if (millis() - time_now > period)
 		{
-			int cpt = 0;
-			String nbrSMSRec;
-			String smsrecu;
-
-			readPhase();
-
-			//gps.f_get_position(&flat, &flon);	// type float
-			//gps.get_position(&lat, &lon);		// type long
-
-
-			Serial.println("read");
-
-
-			nbrSMSRec = GetNbrSmsReceived();
-
-
-			SerialMon.println(nbrSMSRec);
-
-			while (cpt < 0)
-			{
-				Serial.println("sms recu");
-				smsrecu = GetSimSms(cpt + 1);
-				Serial.println(smsrecu);
-				//GetSimSmsInfo(cpt + 1);
-				cpt++;
-			}
-			//DeleateSimSms();
-
-			CreateFrame();
-
+			ss.listen();
+			getGpsPos();
+			SerialAT.listen();
 			time_now = millis();
-
-			HTTPRequest(0);
-
-			//modem.sendSMS("+", "Coucou petite peruche");
-			//modem.sendSMS("+", "test");
 		}
-
+		
 		if (SerialAT.available() > 0)
 		{
 			// Listen to GRPS shield + relay to Arduino Serial Monitor 
@@ -236,8 +164,16 @@ void loop() {
 			Serial.println(c);
 		}
 	}
-}
 
+	/*
+	if (doitonces == 0)
+	{
+	doitonces = 2;
+	getGpsPos();
+	}
+	*/
+
+}
 
 void readPhase()
 {
@@ -634,4 +570,39 @@ void HTTPRequest(int selectreq)
 
 	http.stop();
 	SerialMon.println(F("Server disconnected"));
+}
+
+
+void getGpsPos()
+{
+	int doitonce = 0;
+	while (doitonce != 1)
+	{
+		while (ss.available() > 0)
+		{
+			gps.encode(ss.read());
+		}
+		if (gps.satellites.isValid() && gps.satellites.value() != 0)
+		{
+			doitonce = 1;
+
+			SerialMon.println(gps.location.lat(), 6);
+			SerialMon.println(gps.location.lng(), 6);
+			SerialMon.println(gps.location.age());
+
+			SerialMon.println(gps.satellites.value());
+			SerialMon.println(gps.satellites.age());
+
+			if (gps.location.age() > 1000 || gps.satellites.age() > 1000)
+			{
+				doitonce = 0;
+			}
+		}
+
+		else
+		{
+			SerialMon.println("Non valid");
+			//SerialMon.println(gps.satellites.isValid());
+		}
+	}
 }

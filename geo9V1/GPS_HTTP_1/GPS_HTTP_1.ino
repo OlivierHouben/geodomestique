@@ -5,13 +5,15 @@ Author:	Florian
 */
 
 #define TINY_GSM_MODEM_SIM800
+#define SerialMon Serial
 
 // Increase RX buffer if needed
 //#define TINY_GSM_RX_BUFFER 512 
 
 #include <TinyGsmClient.h>
 #include <ArduinoHttpClient.h>
-#include <TinyGPS.h>
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
 
 // Include Emon Library
 #include "EmonLib.h"
@@ -73,15 +75,15 @@ float flon = 0.00f;
 //#define DUMP_AT_COMMANDS
 
 // Set serial for debug console (to the Serial Monitor, default speed 115200)
-#define SerialMon Serial
+
 
 // Use Hardware Serial on Mega, Leonardo, Micro
 //#define SerialAT Serial1
 
 // or Software Serial on Uno, Nano
-#include <SoftwareSerial.h>
 //SoftwareSerial SerialAT(8, 7); // RX, TX
 SoftwareSerial SerialAT(11, 10); // RX, TX
+SoftwareSerial ss(13, 12); // RX, TX
 const char apn[] = "gprs.base.be";
 const char user[] = "base";
 const char pass[] = "base";
@@ -105,12 +107,14 @@ TinyGsm modem(SerialAT);
 
 TinyGsmClient client(modem);
 HttpClient http(client, server, port);
-TinyGPS gps;
+TinyGPSPlus gps;
 
 void setup() {
 	// Set console baud rate
 	SerialMon.begin(115200);
 	delay(10);
+
+	ss.begin(9600);
 
 	// Set GSM module baud rate
 	SerialAT.begin(9600);
@@ -227,6 +231,8 @@ void loop() {
 
 			//modem.sendSMS("+", "Coucou petite peruche");
 			//modem.sendSMS("+", "test");
+
+			getGpsPos();
 		}
 
 		if (SerialAT.available() > 0)
@@ -634,4 +640,36 @@ void HTTPRequest(int selectreq)
 
 	http.stop();
 	SerialMon.println(F("Server disconnected"));
+}
+
+
+void getGpsPos()
+{
+	int doitonce = 0;
+	while (doitonce != 1)
+	{
+		while (ss.available() > 0)
+		{
+			gps.encode(ss.read());
+		}
+		if (gps.satellites.isValid() && gps.satellites.value() != 0)
+		{
+			doitonce = 1;
+
+			SerialMon.println(gps.location.lat(), 6);
+			SerialMon.println(gps.location.lng(), 6);
+			SerialMon.println(gps.location.age());
+
+			SerialMon.println(gps.satellites.value());
+			SerialMon.println(gps.satellites.age());
+		}
+
+		else
+		{
+			SerialMon.println("Non valid");
+			SerialMon.println(gps.satellites.isValid());
+			SerialMon.print("value ");
+			SerialMon.println(gps.satellites.value());
+		}
+	}
 }

@@ -1,5 +1,5 @@
 /*
-Name:		HTTP_SMS_EMON_HEROKU_1.ino
+Name:		HTTP_SMS_EMON_HEROKU_GPS_2.ino
 Created:	01/05/2018 11:05:21
 Author:	Florian
 */
@@ -11,7 +11,8 @@ Author:	Florian
 
 #include <TinyGsmClient.h>
 #include <ArduinoHttpClient.h>
-#include <TinyGPS.h>
+//#include <TinyGPS.h>
+//#include <TinyGPS++.h>
 
 // Include Emon Library
 #include "EmonLib.h"
@@ -105,11 +106,11 @@ TinyGsm modem(SerialAT);
 
 TinyGsmClient client(modem);
 HttpClient http(client, server, port);
-TinyGPS gps;
+//TinyGPS gps;
 
 void setup() {
 	// Set console baud rate
-	SerialMon.begin(115200);
+	SerialMon.begin(9600);
 	delay(10);
 
 	// Set GSM module baud rate

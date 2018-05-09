@@ -8,10 +8,19 @@ Author:	Florian
 
 // Increase RX buffer if needed
 //#define TINY_GSM_RX_BUFFER 512 
+// Set serial for debug console (to the Serial Monitor, default speed 115200)
+#define SerialMon Serial
 
+// Use Hardware Serial on Mega, Leonardo, Micro
+#define SerialAT Serial2
+#define ss Serial1
+// or Software Serial on Uno, Nano
 #include <TinyGsmClient.h>
-#include <ArduinoHttpClient.h>
 #include <TinyGPS.h>
+//#include <TinyGPS++.h>
+#include <ArduinoHttpClient.h>
+
+
 
 // Include Emon Library
 #include "EmonLib.h"
@@ -72,16 +81,10 @@ float flon = 0.00f;
 // Uncomment this if you want to see all AT commands
 //#define DUMP_AT_COMMANDS
 
-// Set serial for debug console (to the Serial Monitor, default speed 115200)
-#define SerialMon Serial
 
-// Use Hardware Serial on Mega, Leonardo, Micro
-//#define SerialAT Serial1
 
-// or Software Serial on Uno, Nano
-#include <SoftwareSerial.h>
 //SoftwareSerial SerialAT(8, 7); // RX, TX
-SoftwareSerial SerialAT(11, 10); // RX, TX
+//SoftwareSerial SerialAT(11, 10); // RX, TX
 const char apn[] = "gprs.base.be";
 const char user[] = "base";
 const char pass[] = "base";
@@ -95,22 +98,19 @@ String res = "/generator_frame_i_mega/?";
 String imei;
 // /generator_frame_test_i/?";
 // generator_frame_i_mega/?
-#ifdef DUMP_AT_COMMANDS
-#include <StreamDebugger.h>
-StreamDebugger debugger(SerialAT, SerialMon);
-TinyGsm modem(debugger);
-#else
-TinyGsm modem(SerialAT);
-#endif
 
+TinyGsm modem(SerialAT);
 TinyGsmClient client(modem);
 HttpClient http(client, server, port);
-TinyGPS gps;
+//TinyGPSPlus gps;
 
 void setup() {
 	// Set console baud rate
 	SerialMon.begin(115200);
 	delay(10);
+
+	// Set GPS baud rate
+	ss.begin(9600);
 
 	// Set GSM module baud rate
 	SerialAT.begin(9600);
@@ -225,8 +225,13 @@ void loop() {
 
 			HTTPRequest(0);
 
+			//getGpsPos();
+
 			//modem.sendSMS("+", "Coucou petite peruche");
 			//modem.sendSMS("+", "test");
+			// test netoyage tram recue
+
+			//String tmp = SerialAT.readString();
 		}
 
 		if (SerialAT.available() > 0)
@@ -634,4 +639,34 @@ void HTTPRequest(int selectreq)
 
 	http.stop();
 	SerialMon.println(F("Server disconnected"));
+}
+
+
+void getGpsPos()
+{
+	int doitonce = 0;
+	while (doitonce != 1)
+	{
+		while (ss.available() > 0)
+		{
+			gps.encode(ss.read());
+		}
+		if (gps.satellites.isValid() && gps.satellites.value() != 0)
+		{
+			doitonce = 1;
+
+			SerialMon.println(gps.location.lat(), 6);
+			SerialMon.println(gps.location.lng(), 6);
+			SerialMon.println(gps.location.age());
+
+			SerialMon.println(gps.satellites.value());
+			SerialMon.println(gps.satellites.age());
+		}
+
+		else
+		{
+			//SerialMon.println("Non valid");
+			//SerialMon.println(gps.satellites.isValid());
+		}
+	}
 }
