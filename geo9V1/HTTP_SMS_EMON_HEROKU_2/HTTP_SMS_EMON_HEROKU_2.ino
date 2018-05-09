@@ -1,7 +1,9 @@
 /*
 Name:		HTTP_SMS_EMON_HEROKU_1.ino
-Created:	01/05/2018 11:05:21
+Created:	08/05/2018 8:45:12
 Author:	Florian
+
+Bug http don't work with hardware serial : failed to connect
 */
 
 #define TINY_GSM_MODEM_SIM800
@@ -11,7 +13,7 @@ Author:	Florian
 
 #include <TinyGsmClient.h>
 #include <ArduinoHttpClient.h>
-#include <TinyGPS.h>
+//#include <TinyGPS++.h>
 
 // Include Emon Library
 #include "EmonLib.h"
@@ -74,14 +76,14 @@ float flon = 0.00f;
 
 // Set serial for debug console (to the Serial Monitor, default speed 115200)
 #define SerialMon Serial
-
+#define SerialAT Serial2
 // Use Hardware Serial on Mega, Leonardo, Micro
 //#define SerialAT Serial1
 
 // or Software Serial on Uno, Nano
 #include <SoftwareSerial.h>
 //SoftwareSerial SerialAT(8, 7); // RX, TX
-SoftwareSerial SerialAT(11, 10); // RX, TX
+//SoftwareSerial SerialAT(11, 10); // RX, TX
 const char apn[] = "gprs.base.be";
 const char user[] = "base";
 const char pass[] = "base";
@@ -105,11 +107,11 @@ TinyGsm modem(SerialAT);
 
 TinyGsmClient client(modem);
 HttpClient http(client, server, port);
-TinyGPS gps;
+//TinyGPS gps;
 
 void setup() {
 	// Set console baud rate
-	SerialMon.begin(115200);
+	SerialMon.begin(9600);
 	delay(10);
 
 	// Set GSM module baud rate
